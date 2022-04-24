@@ -1,0 +1,284 @@
+https://expressjs.com/en/resources/middleware.html
+https://www.mongodb.com/docs/drivers/node/current/usage-examples/
+https://zellwk.com/blog/crud-express-mongodb/
+> https://testfully.io/blog/postman-api-testing/
+
+🎯 Initial Node Server Setup (express/mongodb)
+
+	> create folder structure (backend/frontend)
+	> npm init -y
+	> npm i express cors mongodb
+	> npm install -g nodemon
+	> create .gitignore > node_modules + .env
+	> go to package.json
+		//> 
+
+		"scripts": {
+	    "start": "node index.js",
+	    "start-dev": "nodemon index.js",
+	    }
+	    
+	> create index.js and open
+		//>
+
+		const express = require("express");
+		const app = express();
+		const cors = require("cors");
+		const { MongoClient, ServerApiVersion } = require("mongodb");
+		const ObjectID = require('mongodb').ObjectID;
+		const port = process.env.POST || 5000;
+
+		// use middleware
+		app.use(cors());
+		app.use(express.json());
+
+		// for testing
+		app.get("/", (req, res) => {
+		  res.send({ message: "Success" });
+		});
+
+		app.listen(port, () => {
+		  console.log("Listening to port", port);
+		});
+
+		> command nodemon index.js [testing conncetion]
+
+🎯 Envarionment Variable Setup
+	> go to https://northflank.com/guides/connecting-to-a-mongo-db-database-using-node-js
+	> require('dotenv').config();
+	> create .env variable
+		> MONGO_URI=mongo+srv://<user>:<pass>@<host>:<port>/<database>?<connection options>
+		> Doesnt matter, using
+			> whitespace between (=)
+			> string
+			> not using string
+	> const uri = process.env.MONGO_URI;
+
+🎯 MongoDB Setup
+
+	> signup google access
+	> create user/pass (copy)
+	> network access > ip address: allow access from anywhere
+	> database > connect > copy from include all
+	> paste in index.js (Server)
+	> replace with <password>
+	> comment // client.close() ❌
+
+🎯 Initialize CRUD operation
+
+	> paste async run function
+	> copy from mongodb initial setup connection
+		> const collection = client.db("database name").collection("collection name");
+		> const collection = client.db("users").collection("usersCollection");
+	> console.log("connected mongodb") [testing connection]
+	> dont forget to call > run().catch(console.dir);
+	> app.method(endpoint, callback)
+	> Callback Function ✔
+	(req, res) 
+		> req 
+			> client থেকে request receive করে।
+		> req.body
+			> req.body is actually key value pair json data from POST method (client side)
+			//> 
+
+			body: JSON.stringify({
+			title: 'foo',
+			body: 'bar',
+			userId: 1,
+			})
+		> req.query
+			> query strings from URL
+			> key value form
+			> start after (?) mark
+		> req.params.id
+			> receive dynamic parameter from URL
+			> endpoint using with /:id
+			> endpoint parameter and req.params.parameter need to be same
+			> require ObjectId and pass idParameter if update based on _id
+		> res 
+			> request receive করার পর process করে client কে data send করে।
+			> res.send(result)
+
+		> Delete === Get && Post === Post
+
+	// GET API (read all notes) 🎯
+	
+		//> 
+
+		app.get("/notes", async (req, res) => {
+		const cursor = notesCollection.find({}); // For receive all data pass empty object {} as query
+		const result = await cursor.toArray(); // Convert result as an Array before sending
+		res.send(result);
+		});
+
+	> go to > [Find Multiple Documents] (https://www.mongodb.com/docs/drivers/node/current/usage-examples/find/#find-multiple-documents)
+	> we will get all data so endpoint should be plural example: ("/notes")
+	> for receive all data pass empty object {} as query
+	> convert result as an Array before sending
+	> send result as a response
+	> copy and comment endpoint from postman to index.js
+
+	// POST API (create a single note) 🎯
+
+		//> 
+
+		app.post("/note", async (req, res) => {
+		const data = req.body;
+		console.log(data); // testing
+		const result = await notesCollection.insertOne(data);
+		res.send(result)
+		});
+
+	> go to > [Insert a Document] (https://www.mongodb.com/docs/drivers/node/current/usage-examples/insertOne/#insert-a-document)
+	> we will create a single data so endpoint should be single example: ("/note")
+	> get receive body data from req.body
+	> send post request from postman Body > raw > JSON
+	> console.log(data) for testing post data
+	> pass data into collection
+	> send result as a response
+	> copy and comment endpoint from postman to index.js
+
+
+    // PUT API (update a single note) 🎯
+
+    //>
+
+	app.put("/note/:id", async (req, res) => {
+      const id = req.params.id;
+      const data = req.body;
+      const filter = { _id: ObjectId(id) };
+      const options = { upsert: true };
+      const updateNote = {
+        $set: {
+          userName: data.userName,
+          textData: data.textData
+        },
+        /* modify object using spread operator
+        $set: {
+          ...data
+        },
+        */
+      };
+      const result = await notesCollection.updateOne(filter, updateNote, options);
+      res.send(result)
+    });
+
+	> go to [Update a Document](https://www.mongodb.com/docs/drivers/node/current/usage-examples/updateOne/#update-a-document)
+    > use params in endpoint example ("/note/:id")
+    > get id from req.params.id
+    > here parameter need to be same example ("/note/:same_parameter" && req.params.same_parameter)
+    > console.log(id) // testing
+    > passing id from url using Postman
+    	> http://localhost:5000/note/62659010b03fcf637b79ebdd
+    > get receive body data from req.body
+    > console.log(data) // testing
+    > create a filter for update
+    	> require ObjectId and pass id parameter
+    > set option upsert: true:
+    	> if not exist add new value or if exist update
+   	> set update object manually or using spread operator example ...data
+   	> updateOne(filter, updateNote, options), parameters need to be placed serially
+   	> send result as a response
+   	> copy and comment endpoint from postman to index.js
+   	> test GET, POST, PUT methods using Postman
+
+    // DELETE API (delete a single note) 🎯
+
+    //>
+
+    app.delete("/note/:id" , async(req, res) =>{
+      const id = req.params.id;
+      const filter = { _id: ObjectId(id) };
+      const result = await notesCollection.deleteOne(filter);
+      res.send(result);
+    })
+
+    > go to [Delete a Document] (https://www.mongodb.com/docs/drivers/node/current/usage-examples/deleteOne/#delete-a-document)
+    > get id from req.params.id
+    > create a filter for delete
+    	> set ObjectId and pass id parameter
+    > send result as a response
+    > test GET, POST, PUT, DELETE methods using Postman
+    > copy and comment endpoint from postman to index.js
+
+🎯 Integrate sending data from client to server
+
+	> Client: create a form
+	> onSubmit get form data and create user obj
+	> Server:  create POST API
+	> Client: set fetch with POST, headers, body
+	> return JSON from POST API
+
+🎯 Save data from React Client side to mongodb
+
+	> const result = await userCollection.insertOne(newUser)
+	> res.send(result)
+
+🎯 Load data to client side
+
+	> create get API on the server
+	> create a query object
+	> collection.find(query)
+	> cursor.toArray()
+	> return the result
+	> show data using useState, useEffect(fetch)
+
+🎯 Delete from server and client state
+	> add event listener
+		> onClick={() => handleUserDelete(user.id)}
+	
+	> add confirm() before delete [good practice]
+	> create delete API
+	> import ObjectID
+		>  ObjectID = require('mongodb').ObjectID,
+	
+	> app.delete('/user/:id', async (req,res) =>{
+		const id = req.params.id;
+		const query = {_id: Object(id)}; // query for delete selected item
+		const result = await userCollection.deleteOne(query)
+		res.send(result);
+	})
+	
+	> Client: if(data.deletedCount > 0){
+		const remaining = users.filter(user => user._id !== id);
+		setUsers(remaining)
+	}
+
+🎯 Update user
+	> Client: create route
+		> path="/update/:id"
+		> const {id} = useParams()
+	> Find user
+	> Server: create app.get API
+	> app.get("update/:id", async (req, res) =>{
+		const id = req.params.id;
+		const query = {_Id: ObjectId(id)}
+		const result = await userCollection.findOne(query);
+		res.send(result)
+	})
+	> Display update user
+		> const {id} = useParams();
+		> const [user, setUser] = useState();
+		> useEffect(() => {
+			const url = `http://localhost:5000/user/${id}`;
+			fetch(url)
+			.then(res => res.json())
+			.then(data => setUser(data))
+		}, [])
+	> Client: create form
+	> fetch(PUT)
+	> Server: create app.put
+	> app.put("/user/:id", async(req, res) =>{
+		const id = req.params.id;
+		const updatedUser = req.body
+		const filter = {_id: ObjectId(id)}
+		const options = {upsert: true} // if exist (update), if not exist (add)
+		const updatedDoc = {
+			$set: {
+				name: updatedUser.name;
+				email: updatedUser.email;
+			}
+		}
+		const result = await userCollection.updateOne(filter, updatedDoc, options);
+		res.send(result)
+	})
