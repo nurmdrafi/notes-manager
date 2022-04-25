@@ -106,14 +106,16 @@ https://zellwk.com/blog/crud-express-mongodb/
 		//> 
 
 		app.get("/notes", async (req, res) => {
-		const cursor = notesCollection.find({}); // For receive all data pass empty object {} as query
-		const result = await cursor.toArray(); // Convert result as an Array before sending
+		const query = req.query;
+		const cursor = notesCollection.find(query);
+		const result = await cursor.toArray();
 		res.send(result);
 		});
 
 	> go to > [Find Multiple Documents] (https://www.mongodb.com/docs/drivers/node/current/usage-examples/find/#find-multiple-documents)
 	> we will get all data so endpoint should be plural example: ("/notes")
-	> for receive all data pass empty object {} as query
+	> get query from req.query
+	> create cursor, pass query
 	> convert result as an Array before sending
 	> send result as a response
 	> copy and comment endpoint from postman to index.js
@@ -282,3 +284,23 @@ https://zellwk.com/blog/crud-express-mongodb/
 		const result = await userCollection.updateOne(filter, updatedDoc, options);
 		res.send(result)
 	})
+
+
+
+	 fetch(`http://localhost:5000/note/${id}`, {
+      method: "PUT",
+      headers: {
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({ userName, textData }),
+      /* body:JSON.stringify({
+        "userName": userName,
+        "textData": textData
+      }) */
+    })
+      .then((res) => res.json())
+      .then((data) => console.log(data));
+    setIsReload(!isReload);
+
+
+    

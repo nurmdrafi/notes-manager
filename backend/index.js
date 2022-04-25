@@ -26,7 +26,8 @@ async function run() {
     // GET API (read all notes)
     // http://localhost:5000/notes
     app.get("/notes", async (req, res) => {
-      const cursor = notesCollection.find({}); // For receive all data pass empty object {} as query
+      const query = req.query;
+      const cursor = notesCollection.find(query); // For receive all data pass empty object {} as query
       const result = await cursor.toArray();
       res.send(result);
     });
