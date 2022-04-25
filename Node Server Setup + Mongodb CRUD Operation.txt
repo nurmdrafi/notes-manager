@@ -101,7 +101,7 @@ https://zellwk.com/blog/crud-express-mongodb/
 
 		> Delete === Get && Post === Post
 
-	// GET API (read all notes) 🎯
+	// GET API (read all notes) ❄❄❄
 	
 		//> 
 
@@ -120,7 +120,7 @@ https://zellwk.com/blog/crud-express-mongodb/
 	> send result as a response
 	> copy and comment endpoint from postman to index.js
 
-	// POST API (create a single note) 🎯
+	// POST API (create a single note) ❄❄❄
 
 		//> 
 
@@ -141,7 +141,7 @@ https://zellwk.com/blog/crud-express-mongodb/
 	> copy and comment endpoint from postman to index.js
 
 
-    // PUT API (update a single note) 🎯
+    // PUT API (update a single note) ❄❄❄
 
     //>
 
@@ -184,7 +184,7 @@ https://zellwk.com/blog/crud-express-mongodb/
    	> copy and comment endpoint from postman to index.js
    	> test GET, POST, PUT methods using Postman
 
-    // DELETE API (delete a single note) 🎯
+    // DELETE API (delete a single note) ❄❄❄
 
     //>
 
@@ -203,104 +203,123 @@ https://zellwk.com/blog/crud-express-mongodb/
     > test GET, POST, PUT, DELETE methods using Postman
     > copy and comment endpoint from postman to index.js
 
-🎯 Integrate sending data from client to server
+🐼 Get all data from MongoDB
+		//>
 
-	> Client: create a form
-	> onSubmit get form data and create user obj
-	> Server:  create POST API
-	> Client: set fetch with POST, headers, body
-	> return JSON from POST API
+	const [notes, setNotes] = useState([]);
+  const [isReload, setIsReload] = useState(false); ✔
 
-🎯 Save data from React Client side to mongodb
+  useEffect(() => {
+    // GET Method 🐼
+    fetch("http://localhost:5000/notes")
+      .then((res) => res.json())
+      .then((data) => setNotes(data));
+  }, [isReload]);
 
-	> const result = await userCollection.insertOne(newUser)
-	> res.send(result)
+  > declare state for notes (all data)
+  > set isReload as a dependency for reload data after changes
 
-🎯 Load data to client side
+🐼 Search by query parameter from MongoDB and display data setNotes(data)
+		//>
 
-	> create get API on the server
-	> create a query object
-	> collection.find(query)
-	> cursor.toArray()
-	> return the result
-	> show data using useState, useEffect(fetch)
+	  const handleSearch = (e) => {
+    e.preventDefault();
+    const searchText = e.target.searchText.value;
+    // clear input
+    e.target.searchText.value = "";
 
-🎯 Delete from server and client state
-	> add event listener
-		> onClick={() => handleUserDelete(user.id)}
-	
-	> add confirm() before delete [good practice]
-	> create delete API
-	> import ObjectID
-		>  ObjectID = require('mongodb').ObjectID,
-	
-	> app.delete('/user/:id', async (req,res) =>{
-		const id = req.params.id;
-		const query = {_id: Object(id)}; // query for delete selected item
-		const result = await userCollection.deleteOne(query)
-		res.send(result);
-	})
-	
-	> Client: if(data.deletedCount > 0){
-		const remaining = users.filter(user => user._id !== id);
-		setUsers(remaining)
-	}
+    if(searchText === ""){ // load all data when empty
+      fetch("http://localhost:5000/notes")
+      .then((res) => res.json())
+      .then((data) => setNotes(data));
+    } else{
+      fetch(`http://localhost:5000/notes?userName=${searchText}`)
+      .then((res) => res.json())
+      .then((data) => setNotes(data)); ✔
+    }
+  };
 
-🎯 Update user
-	> Client: create route
-		> path="/update/:id"
-		> const {id} = useParams()
-	> Find user
-	> Server: create app.get API
-	> app.get("update/:id", async (req, res) =>{
-		const id = req.params.id;
-		const query = {_Id: ObjectId(id)}
-		const result = await userCollection.findOne(query);
-		res.send(result)
-	})
-	> Display update user
-		> const {id} = useParams();
-		> const [user, setUser] = useState();
-		> useEffect(() => {
-			const url = `http://localhost:5000/user/${id}`;
-			fetch(url)
-			.then(res => res.json())
-			.then(data => setUser(data))
-		}, [])
-	> Client: create form
-	> fetch(PUT)
-	> Server: create app.put
-	> app.put("/user/:id", async(req, res) =>{
-		const id = req.params.id;
-		const updatedUser = req.body
-		const filter = {_id: ObjectId(id)}
-		const options = {upsert: true} // if exist (update), if not exist (add)
-		const updatedDoc = {
-			$set: {
-				name: updatedUser.name;
-				email: updatedUser.email;
-			}
-		}
-		const result = await userCollection.updateOne(filter, updatedDoc, options);
-		res.send(result)
-	})
+  > search by query parameter from MongoDB
+  > display result by setNotes(data) ✔
 
+🐼 Insert new data in MongoDB by POST Method and reload by setIsReload(!isReload)
+		//>
 
+		const handlePost = (e) => {
+    e.preventDefault();
+    const userName = e.target.userName.value;
+    const textData = e.target.textData.value;
 
-	 fetch(`http://localhost:5000/note/${id}`, {
+    // clear input
+    e.target.userName.value = "";
+    e.target.textData.value = "";
+
+    fetch("http://localhost:5000/note", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+      },
+
+      body: JSON.stringify({ userName, textData }),
+
+      /* body:JSON.stringify({
+        "userName": userName,
+        "textData": textData
+      }) */
+
+    }).then((res) => res.json());
+    // .then((data) => console.log(data));
+    setIsReload(!isReload); ✔
+  };
+
+  > insert new data by POST Method
+  > body set by manually or object literal also using spread operator at backend
+  > reload by setIsReload(!isReload) ✔
+  > here isReload fetch all data after changes
+
+🐼 Delete data from MongoDB using DELETE Method and reload by setIsReload(!isReload)
+		//>
+
+		const handleDelete = (id) => {
+    fetch(`http://localhost:5000/note/${id}`, {
+      method: "DELETE",
+    });
+    setIsReload(!isReload);
+  };
+
+  > delete data from MongoDB using DELETE Method
+  > reload by setIsReload(!isReload) ✔
+  > here isReload fetch all data after changes
+
+🐼 Update data using PUT Method and reload by setIsReload(!isReload)
+		//>
+
+		const handleUpdate = (e) => {
+    e.preventDefault();
+    const userName = e.target.userName.value;
+    const textData = e.target.textData.value;
+    // clear input
+    e.target.userName.value = "";
+    e.target.textData.value = "";
+
+    fetch(`http://localhost:5000/note/${id}`, {
       method: "PUT",
       headers: {
         "content-type": "application/json",
       },
       body: JSON.stringify({ userName, textData }),
+
       /* body:JSON.stringify({
         "userName": userName,
         "textData": textData
       }) */
-    })
-      .then((res) => res.json())
-      .then((data) => console.log(data));
-    setIsReload(!isReload);
 
+    }).then((res) => res.json());
+    // .then((data) => console.log(data));
+    setIsReload(!isReload); ✔
+  };
 
-    
+  > Update data using PUT Method 
+  > reload by setIsReload(!isReload) ✔
+  > here isReload fetch all data after changes
+  > create custom hook is optional for [isReload, setIsReload]

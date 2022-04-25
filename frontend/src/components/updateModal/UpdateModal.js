@@ -27,6 +27,7 @@ export default function UpdateModal({ id, isReload, setIsReload }) {
     // clear input
     e.target.userName.value = "";
     e.target.textData.value = "";
+
     fetch(`http://localhost:5000/note/${id}`, {
       method: "PUT",
       headers: {

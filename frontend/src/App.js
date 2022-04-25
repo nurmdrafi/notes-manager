@@ -21,17 +21,16 @@ function App() {
     const searchText = e.target.searchText.value;
     // clear input
     e.target.searchText.value = "";
-    fetch(`http://localhost:5000/notes?userName=${searchText}`)
+    
+    if(searchText === ""){
+      fetch("http://localhost:5000/notes")
       .then((res) => res.json())
       .then((data) => setNotes(data));
-  };
-
-  // DELETE Method 🐼
-  const handleDelete = (id) => {
-    fetch(`http://localhost:5000/note/${id}`, {
-      method: "DELETE",
-    });
-    setIsReload(!isReload);
+    } else{
+      fetch(`http://localhost:5000/notes?userName=${searchText}`)
+      .then((res) => res.json())
+      .then((data) => setNotes(data));
+    }
   };
 
   // POST Method 🐼
@@ -50,12 +49,22 @@ function App() {
       },
 
       body: JSON.stringify({ userName, textData }),
+
       /* body:JSON.stringify({
         "userName": userName,
         "textData": textData
       }) */
+
     }).then((res) => res.json());
     // .then((data) => console.log(data));
+    setIsReload(!isReload);
+  };
+
+  // DELETE Method 🐼
+  const handleDelete = (id) => {
+    fetch(`http://localhost:5000/note/${id}`, {
+      method: "DELETE",
+    });
     setIsReload(!isReload);
   };
 
